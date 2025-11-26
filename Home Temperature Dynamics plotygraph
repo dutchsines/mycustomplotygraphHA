@@ -1,0 +1,169 @@
+type: custom:plotly-graph
+title: 🏡 Home Temperature Dynamics 🏡
+hours_to_show: 48h
+show_legend: true
+entities:
+  - entity: sensor.h5100_044a_temperature
+    name: 🚚 Truck
+    show_value: true
+    decimals: 1
+    line:
+      color: "#ff4d4d"
+      shape: spline
+      yaxis: y1
+      marker:
+        size: 1
+  - entity: sensor.h5106_6a1f_temperature
+    name: 🛋️ Living
+    show_value: true
+    decimals: 1
+    line:
+      color: "#66ff66"
+      shape: spline
+      yaxis: y2
+      marker:
+        size: 1
+  - entity: sensor.h5104_6370_temperature
+    name: 🛁 Bath
+    show_value: true
+    decimals: 1
+    line:
+      color: "#6699ff"
+      shape: spline
+      yaxis: y3
+      marker:
+        size: 1
+  - entity: sensor.h5100_6e41_temperature
+    name: 💻 Office
+    show_value: true
+    decimals: 1
+    line:
+      color: "#ffb366"
+      shape: spline
+      yaxis: y4
+      marker:
+        size: 1
+  - entity: sensor.h5100_2d7f_temperature
+    name: 🦶 Floor
+    show_value: true
+    decimals: 1
+    line:
+      color: "#c38b6d"
+      shape: spline
+      yaxis: y5
+      marker:
+        size: 1
+  - entity: sensor.h5104_2350_temperature
+    name: 🛌 Bed
+    show_value: true
+    decimals: 1
+    line:
+      color: "#a366ff"
+      shape: spline
+      yaxis: y6
+      marker:
+        size: 1
+  - entity: sensor.st_00176926_air_temperature
+    show_value: true
+    name: " "
+    decimals: 1
+    line:
+      color: "#ffffffcc"
+      shape: spline
+      yaxis: y1
+      marker:
+        size: 1
+  - entity: sensor.st_00176926_air_temperature
+    time_offset: 24h
+    name: 🏡 Tempest
+    decimals: 1
+    line:
+      color: "#ffffffcc"
+      shape: spline
+      dash: dot
+      yaxis: y5
+      marker:
+        size: 1
+fn: |
+  $fn({getFromConfig, vars})=> {
+    const range = getFromConfig("visible_range");
+    const width = range[1] - range[0];
+    vars.scroll = (label, p) => ({
+      args: [
+        {
+          layout: {
+            "xaxis.range": [range[0] + width*p, range[1] + width*p],
+          }
+        }, {
+          transition: { duration: 150 }
+        }
+      ],
+      label,
+      method: "animate",
+    })
+    vars.zoom = (label, h) => ({
+      args: [
+        {
+          layout: {
+            "xaxis.range": [Date.now()-1000*60*60*h, Date.now()],
+          }
+        }
+      ],
+      label,
+      method: "animate",
+    })
+  }
+layout:
+  margin:
+    l: 35
+    r: 62
+    t: 0
+    b: 55
+  paper_bgcolor: rgba(0,0,0,0)
+  plot_bgcolor: rgba(0,0,0,0)
+  yaxis:
+    title: null
+    fixedrange: true
+    showgrid: true
+  yaxis2:
+    title: null
+    showticklabels: false
+    fixedrange: true
+  yaxis3:
+    title: null
+    showticklabels: false
+    fixedrange: true
+  yaxis4:
+    title: null
+    showticklabels: false
+    fixedrange: true
+  yaxis5:
+    title: null
+    showticklabels: false
+    fixedrange: true
+  yaxis6:
+    title: null
+    showticklabels: false
+    fixedrange: true
+  yaxis7:
+    title: null
+    showticklabels: false
+    fixedrange: true
+  yaxis8:
+    title: null
+    showticklabels: false
+    fixedrange: true
+  xaxis:
+    tickformat: "%I %p"
+    tickangle: 0
+    showgrid: false
+    gridcolor: "#444444"
+grid_options:
+  columns: 12
+  rows: 3.2
+card_mod:
+  style: |
+    ha-card {
+      background: transparent !important;
+      box-shadow: none !important;
+    }

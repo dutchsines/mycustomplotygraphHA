@@ -1,169 +1,149 @@
-type: custom:plotly-graph
-title: 🏡 Home Temperature Dynamics 🏡
-hours_to_show: 48h
-show_legend: true
-entities:
-  - entity: sensor.h5100_044a_temperature
-    name: 🚚 Truck
-    show_value: true
-    decimals: 1
-    line:
-      color: "#ff4d4d"
-      shape: spline
-      yaxis: y1
-      marker:
-        size: 1
-  - entity: sensor.h5106_6a1f_temperature
-    name: 🛋️ Living
-    show_value: true
-    decimals: 1
-    line:
-      color: "#66ff66"
-      shape: spline
-      yaxis: y2
-      marker:
-        size: 1
-  - entity: sensor.h5104_6370_temperature
-    name: 🛁 Bath
-    show_value: true
-    decimals: 1
-    line:
-      color: "#6699ff"
-      shape: spline
-      yaxis: y3
-      marker:
-        size: 1
-  - entity: sensor.h5100_6e41_temperature
-    name: 💻 Office
-    show_value: true
-    decimals: 1
-    line:
-      color: "#ffb366"
-      shape: spline
-      yaxis: y4
-      marker:
-        size: 1
-  - entity: sensor.h5100_2d7f_temperature
-    name: 🦶 Floor
-    show_value: true
-    decimals: 1
-    line:
-      color: "#c38b6d"
-      shape: spline
-      yaxis: y5
-      marker:
-        size: 1
-  - entity: sensor.h5104_2350_temperature
-    name: 🛌 Bed
-    show_value: true
-    decimals: 1
-    line:
-      color: "#a366ff"
-      shape: spline
-      yaxis: y6
-      marker:
-        size: 1
-  - entity: sensor.st_00176926_air_temperature
-    show_value: true
-    name: " "
-    decimals: 1
-    line:
-      color: "#ffffffcc"
-      shape: spline
-      yaxis: y1
-      marker:
-        size: 1
-  - entity: sensor.st_00176926_air_temperature
-    time_offset: 24h
-    name: 🏡 Tempest
-    decimals: 1
-    line:
-      color: "#ffffffcc"
-      shape: spline
-      dash: dot
-      yaxis: y5
-      marker:
-        size: 1
-fn: |
-  $fn({getFromConfig, vars})=> {
-    const range = getFromConfig("visible_range");
-    const width = range[1] - range[0];
-    vars.scroll = (label, p) => ({
-      args: [
-        {
-          layout: {
-            "xaxis.range": [range[0] + width*p, range[1] + width*p],
-          }
-        }, {
-          transition: { duration: 150 }
-        }
-      ],
-      label,
-      method: "animate",
-    })
-    vars.zoom = (label, h) => ({
-      args: [
-        {
-          layout: {
-            "xaxis.range": [Date.now()-1000*60*60*h, Date.now()],
-          }
-        }
-      ],
-      label,
-      method: "animate",
-    })
-  }
-layout:
-  margin:
-    l: 35
-    r: 62
-    t: 0
-    b: 55
-  paper_bgcolor: rgba(0,0,0,0)
-  plot_bgcolor: rgba(0,0,0,0)
-  yaxis:
-    title: null
-    fixedrange: true
-    showgrid: true
-  yaxis2:
-    title: null
-    showticklabels: false
-    fixedrange: true
-  yaxis3:
-    title: null
-    showticklabels: false
-    fixedrange: true
-  yaxis4:
-    title: null
-    showticklabels: false
-    fixedrange: true
-  yaxis5:
-    title: null
-    showticklabels: false
-    fixedrange: true
-  yaxis6:
-    title: null
-    showticklabels: false
-    fixedrange: true
-  yaxis7:
-    title: null
-    showticklabels: false
-    fixedrange: true
-  yaxis8:
-    title: null
-    showticklabels: false
-    fixedrange: true
-  xaxis:
-    tickformat: "%I %p"
-    tickangle: 0
-    showgrid: false
-    gridcolor: "#444444"
+type: custom:bubble-card
+card_type: button
+button_type: state
+entity: sensor.h5104_6370_temperature
+name: Bathroom
+show_state: false
+show_icon: false
+card_layout: normal
 grid_options:
-  columns: 12
-  rows: 3.2
+  columns: 3.5
+  rows: auto
+scrolling_effect: false
 card_mod:
-  style: |
-    ha-card {
+  style: >
+    :host {
+      --bubble-border-radius: 16px !important;
+    } /* 1. Transparent card background */  ha-card, .bubble-card,
+    .card-content, #card {
       background: transparent !important;
       box-shadow: none !important;
+      border: none !important;
     }
+
+    /* 2. Dynamic Card Name (Top Status + Battery Emoji) */  .bubble-name {
+      visibility: hidden;
+      position: relative;
+    }
+
+    .bubble-name::before {
+      visibility: visible;
+      position: absolute;
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 1.1em;
+      font-weight: 900;
+
+      {% set battery = states('sensor.h5104_6370_battery') | float(0) %}
+
+      /* Battery color */
+      {% if battery >= 80 %}
+        {% set title_color = 'var(--success-color)' %}
+        {% set battery_emoji = "🔋" %}
+      {% elif battery >= 50 %}
+        {% set title_color = 'var(--info-color)' %}
+        {% set battery_emoji = "🟢" %}
+      {% elif battery >= 30 %}
+        {% set title_color = 'var(--warning-color)' %}
+        {% set battery_emoji = "🟡" %}
+      {% elif battery >= 15 %}
+        {% set title_color = 'var(--error-color)' %}
+        {% set battery_emoji = "🟠" %}
+      {% else %}
+        {% set title_color = '#ff0000' %}
+        {% set battery_emoji = "❌" %}
+      {% endif %}
+
+      content: "{{ battery_emoji }} Bathroom {{ battery_emoji }}";
+      color: {{ title_color }} !important;
+    }
+
+    /* 3. Temperature + Humidity text with individual colors */  .state {
+      font-size: 1em;
+      font-weight: 700;
+      text-align: center;
+      position: relative;
+      margin-bottom: 0em;
+    }
+
+    /* Temperature part */  .state::before {
+      {% set t = states('sensor.h5104_6370_temperature') | float(0) | round(0) %}
+      {% if t < 60 %}
+        {% set temp_emoji = "🥶" %}
+        {% set temp_color = 'var(--info-color)' %}
+      {% elif t < 75 %}
+        {% set temp_emoji = "🤓" %}
+        {% set temp_color = 'var(--success-color)' %}
+      {% elif t < 85 %}
+        {% set temp_emoji = "😓" %}
+        {% set temp_color = 'var(--warning-color)' %}
+      {% elif t < 90 %}
+        {% set temp_emoji = "🥵" %}
+        {% set temp_color = 'var(--error-color)' %}
+      {% else %}
+        {% set temp_emoji = "❌" %}
+        {% set temp_color = 'var(--error-color)' %}
+      {% endif %}
+      content: "{{ temp_emoji }} {{ t }}°";
+      color: {{ temp_color }} !important;
+    }
+
+    /* Humidity part */  .state::after {
+      {% set humidity = states('sensor.h5104_6370_humidity') | float(0) | int %}
+      {% if humidity >= 70 %}
+        {% set hum_emoji = "💦" %}
+        {% set hum_color = 'var(--info-color)' %}
+      {% elif humidity >= 60 %}
+        {% set hum_emoji = "☁️" %}
+        {% set hum_color = 'var(--warning-color)' %}
+      {% elif humidity >= 30 %}
+        {% set hum_emoji = "✅" %}
+        {% set hum_color = 'var(--success-color)' %}
+      {% elif humidity >= 20 %}
+        {% set hum_emoji = "💨" %}
+        {% set hum_color = '#daa520' %}
+      {% else %}
+        {% set hum_emoji = "🏜️" %}
+        {% set hum_color = '#a0522d' %}
+      {% endif %}
+      content: "➖{{ humidity }}% {{ hum_emoji }}";
+      color: {{ hum_color }} !important;
+    }
+
+    /* 4. Dynamic bubble button background using linear gradient */
+    .bubble-button,  .bubble-button-inner {
+      {% set t = states('sensor.h5104_6370_temperature') | float(0) %}
+      {% set temp_color = 'rgba(255,255,255,0.05)' %}
+      {% if t < 60 %}
+        {% set temp_color = 'rgba(0, 125, 255, 0.2)' %}
+      {% elif t < 75 %}
+        {% set temp_color = 'rgba(0, 200, 0, 0.2)' %}
+      {% elif t < 85 %}
+        {% set temp_color = 'rgba(255, 165, 0, 0.2)' %}
+      {% elif t < 90 %}
+        {% set temp_color = 'rgba(255, 0, 0, 0.2)' %}
+      {% else %}
+        {% set temp_color = 'rgba(200, 0, 0, 0.3)' %}
+      {% endif %}
+
+      {% set h = states('sensor.h5104_6370_humidity') | float(0) %}
+      {% set hum_color = 'rgba(0,0,0,0.05)' %}
+      {% if h >= 70 %}
+        {% set hum_color = 'rgba(0, 150, 255, 0.2)' %}
+      {% elif h >= 60 %}
+        {% set hum_color = 'rgba(255, 165, 0, 0.2)' %}
+      {% elif h >= 30 %}
+        {% set hum_color = 'rgba(0, 200, 0, 0.2)' %}
+      {% else %}
+        {% set hum_color = 'rgba(160, 82, 45, 0.2)' %}
+      {% endif %}
+
+      background: linear-gradient(
+        to right,
+        {{ temp_color }} 0%,
+        {{ hum_color }} 100%
+      ) !important;
+
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: none !important;

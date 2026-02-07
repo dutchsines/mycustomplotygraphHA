@@ -1,195 +1,151 @@
-type: custom:weather-chart-card
-entity: weather.206_n_arch_st
-show_main: false
-show_temperature: false
-show_current_condition: false
-show_attributes: false
-show_time: false
-show_time_seconds: false
-show_day: false
-show_date: false
-show_humidity: false
-show_pressure: false
-show_wind_direction: false
-show_wind_speed: false
-show_sun: false
-show_feels_like: false
-show_dew_point: false
-show_wind_gust_speed: false
-show_visibility: false
-show_last_changed: false
-use_12hour_format: false
-icons_size: "51"
-animated_icons: true
-icon_style: style1
-autoscroll: false
-forecast:
-  precipitation_type: rainfall
-  show_probability: false
-  labels_font_size: "15"
-  precip_bar_size: "100"
-  style: style2
-  show_wind_forecast: false
-  condition_icons: true
-  round_temp: false
-  type: daily
-  number_of_forecasts: "7"
-  disable_animation: false
-units:
-  speed: ""
+type: custom:horizon-card
 card_mod:
-  style: >
-    ha-card {
-      position: relative;
-      overflow: hidden;
-      border-radius: 16px;
-    }
+  style: |
+    :host { --bubble-border-radius: 16px !important; }
 
-    /* ===============================
-       GLASS BLUR LAYER
-       =============================== */
-    ha-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-
-      /* This is critical */
-      backdrop-filter: blur(14px) saturate(140%);
-      -webkit-backdrop-filter: blur(14px) saturate(140%);
-
-      /* Must NOT be fully transparent */
-      background: rgba(0, 0, 0, 0.25);
-
-      pointer-events: none;
-    }
-
-    /* Keep all real content ABOVE blur */ ha-card > * {
-      position: relative;
-      z-index: 1;
-    }  /* ----------------------------
-       TEMP -> BOTTOM COLOR
-       ---------------------------- */
-    {% set temp = states('sensor.st_00176926_air_temperature') | float(0) %} {%
-    set bottom_color = '#D8C8B8' %} {% if temp >= 105 %}
-      {% set bottom_color = '#58141D' %}
-    {% elif temp >= 100 %}
-      {% set bottom_color = '#B32821' %}
-    {% elif temp >= 95 %}
-      {% set bottom_color = '#C73E1D' %}
-    {% elif temp >= 90 %}
-      {% set bottom_color = '#E35D27' %}
-    {% elif temp >= 85 %}
-      {% set bottom_color = '#FF7518' %}
-    {% elif temp >= 80 %}
-      {% set bottom_color = '#FF9C00' %}
-    {% elif temp >= 75 %}
-      {% set bottom_color = '#FFD200' %}
-    {% elif temp >= 70 %}
-      {% set bottom_color = '#FFEC00' %}
-    {% elif temp >= 65 %}
-      {% set bottom_color = '#A9C94C' %}
-    {% elif temp >= 60 %}
-      {% set bottom_color = '#7DBB48' %}
-    {% elif temp >= 55 %}
-      {% set bottom_color = '#6DB04A' %}
-    {% elif temp >= 50 %}
-      {% set bottom_color = '#4C9F38' %}
-    {% elif temp >= 45 %}
-      {% set bottom_color = '#1D9D73' %}
-    {% elif temp >= 40 %}
-      {% set bottom_color = '#00A19A' %}
-    {% elif temp >= 35 %}
-      {% set bottom_color = '#6CC6CE' %}
-    {% elif temp >= 30 %}
-      {% set bottom_color = '#9ED4F0' %}
-    {% elif temp >= 25 %}
-      {% set bottom_color = '#2C5AA0' %}
-    {% elif temp >= 20 %}
-      {% set bottom_color = '#1C3D7A' %}
-    {% elif temp >= 15 %}
-      {% set bottom_color = '#5C4699' %}
-    {% elif temp >= 10 %}
-      {% set bottom_color = '#7E58A0' %}
-    {% elif temp >= 5 %}
-      {% set bottom_color = '#856A67' %}
-    {% elif temp >= 0 %}
-      {% set bottom_color = '#A6A1A1' %}
-    {% elif temp >= -5 %}
-      {% set bottom_color = '#BFB6AF' %}
+    {% set lux = states('sensor.st_00176926_illuminance') | float(0) %}
+    {% set top_color = '#05060A' %}
+    {% if lux >= 100000 %}{% set top_color = '#FFFFFF' %}
+    {% elif lux >= 60000 %}{% set top_color = '#FFF2CC' %}
+    {% elif lux >= 40000 %}{% set top_color = '#FFB36A' %}
+    {% elif lux >= 20000 %}{% set top_color = '#FFD59A' %}
+    {% elif lux >= 10000 %}{% set top_color = '#E9F6FF' %}
+    {% elif lux >= 5000 %}{% set top_color = '#7EC8FF' %}
+    {% elif lux >= 2500 %}{% set top_color = '#9FD6C8' %}
+    {% elif lux >= 1000 %}{% set top_color = '#B8D9F2' %}
+    {% elif lux >= 400 %}{% set top_color = '#78AEDD' %}
+    {% elif lux >= 150 %}{% set top_color = '#4C7FB8' %}
+    {% elif lux >= 60 %}{% set top_color = '#2A4C7A' %}
+    {% elif lux >= 20 %}{% set top_color = '#1A2E5A' %}
+    {% elif lux >= 5 %}{% set top_color = '#121A3A' %}
+    {% elif lux >= 1 %}{% set top_color = '#0A1026' %}
     {% endif %}
 
+    {% set is_night = is_state('sun.sun','below_horizon') %}
+    {% set has_sun = not is_night %}
+    {% set sun_state = states('sun.sun') %}
+    {% set now_ts = as_timestamp(now()) %}
+    {% set next_rise = as_timestamp(state_attr('sun.sun','next_rising'), 0) %}
+    {% set next_set  = as_timestamp(state_attr('sun.sun','next_setting'), 0) %}
+    {% set elev = states('sensor.sun_solar_elevation') | float(-90) %}
+
+    {% if sun_state == 'above_horizon' %}
+      {% set rise_ts = next_rise %}
+      {% if next_rise > now_ts %}{% set rise_ts = next_rise - 86400 %}{% endif %}
+      {% set set_ts = next_set %}
+      {% set denom = (set_ts - rise_ts) if (set_ts - rise_ts) > 0 else 1 %}
+      {% set progress = (now_ts - rise_ts) / denom %}
+      {% set progress = 0 if progress < 0 else (1 if progress > 1 else progress) %}
+      {% set sun_x = (10 + (80 * progress)) %}
+      {% set e = elev if elev > 0 else 0 %}
+      {% set e = 70 if e > 70 else e %}
+      {% set sun_y = (85 - (80 * (e / 70))) %}
+    {% else %}
+      {% set sun_x = 50 %}
+      {% set sun_y = 120 %}
+    {% endif %}
 
     /* ----------------------------
        CARD BASE
        ---------------------------- */
-        ha-card {
-          position: relative;
-          background: transparent !important;
-          box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5) !important;
-          border-radius: 16px !important;
-          overflow: hidden;
-          transform-origin: top;
-          transform: scale(0.95);
-          transform-origin: top center;
-          margin: 0 !important;
-    } /* ONE unified glow layer */ ha-card::before {
-      content: "";
-      position: absolute;
-      inset: -25%;
-      pointer-events: none;
-      z-index: 0;
-
-      background:
-
-        /* 🌡️ TEMP GLOW (BOTTOM) — this was upside-down in your version */
-        radial-gradient(
-          circle at 50% 0%,
-          {{ bottom_color ~ '88' }} 50%,
-          rgba(0,0,0,0) 100%
-        );
-
-      opacity: 1;
-      filter: blur(18px);
-
-        /* ----------------------------
-           WIND DIRECTION (degrees) -> glow position
-           ---------------------------- */
-        {% set deg = states('sensor.st_00176926_wind_direction') | float(0) %}
-        {% set rad = (deg - 90) * 3.14159265 / 180 %} {% set wind_x = 50 + (45 *
-        (rad | cos)) %} {% set wind_y = 50 + (45 * (rad | sin)) %}
-
-        /* NORTH = RED | SOUTH = BLUE (smooth cosine) */ {% set north_strength =
-        ((deg * 3.14159265 / 180) | cos + 1) / 2 %} {% set red  = (255 *
-        north_strength) | int %} {% set blue = (255 * (1 - north_strength)) |
-        int %} {% set wind_rgba = 'rgba(' ~ red ~ ', 1, ' ~ blue ~ ', 1)' %}
-
-    }  /* -----------------------------
-       WIND BORDER GLOW (MASKED)
-       ----------------------------- */
-    ha-card::after {
-      content: "";
-      position: absolute;
-      inset: -1px;
-      pointer-events: none;
-      z-index: 2;
-      border-radius: 16px;
-      padding: 5px;
-
-      background:
-        radial-gradient(
-          circle at {{ wind_x }}% {{ wind_y }}%,
-          {{ wind_rgba }} 10%,
-          rgba(0,0,0,0) 25%
-        );
-
-      -webkit-mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor;
-
-      mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
-      mask-composite: exclude;
+    ha-card {
+      position: relative;
+      background: transparent !important;
+      box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5) !important;
+      overflow: hidden;
+      transform-origin: top;
+      border-top-left-radius: 16px !important;
+      border-top-right-radius: 16px !important;
+      border-bottom-left-radius: 0px !important;
+      border-bottom-right-radius: 0px !important;
     }
+
+    ha-card::before {
+          content: "";
+          position: absolute;
+          inset: -25%;
+          pointer-events: none;
+          z-index: 0;
+          filter: blur(2px);
+          
+          /* ANIMATION CALL */
+          animation: sun-pulse 6s ease-in-out infinite;
+
+          {% set sun_outer = (top_color ~ '33') if has_sun else 'rgba(0,0,0,0)' %}
+          {% set sun_mid   = (top_color ~ '66') if has_sun else 'rgba(0,0,0,0)' %}
+          {% set sun_core  = (top_color ~ 'CC') if has_sun else 'rgba(0,0,0,0)' %}
+
+          background:
+            /* 🌞 OUTER ATMOSPHERE - Reduced from 20%/50% to 10%/30% */
+            radial-gradient(
+              circle at {{ sun_x }}% {{ sun_y }}%, 
+              {{ sun_outer }} 10%, 
+              transparent 20%
+            ),
+            /* ☀️ MID AURA - Reduced from 35% to 15% */
+            radial-gradient(
+              circle at {{ sun_x }}% {{ sun_y }}%, 
+              {{ sun_mid }} 0%, 
+              transparent 25%
+            ),
+            /* 🔆 INNER CORE - Sharpened to 4% */
+            radial-gradient(
+              circle at {{ sun_x }}% {{ sun_y }}%, 
+              {{ sun_core }} 5%, 
+              transparent 0%
+            );
+
+        }/* ----------------------------
+           ANIMATION & Z-INDEX
+           ---------------------------- */
+        @keyframes sun-pulse {
+          0%, 100% { opacity: 1; transform: scale(1.25); }
+          50% { opacity: 1; transform: scale(1.05); }
+        }
+
+    ha-card > * {
+      position: relative;
+      z-index: 2;
+    }
+        ha-card::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          z-index: 1;
+          opacity: 0.85;
+
+          {% set now_ts = as_timestamp(now()) %}
+          {% set rise_ts = as_timestamp(state_attr('sun.sun','next_rising'), 0) %}
+          {% set set_ts  = as_timestamp(state_attr('sun.sun','next_setting'), 0) %}
+
+          {# make rise_ts be today's sunrise #}
+          {% if rise_ts > now_ts %}{% set rise_ts = rise_ts - 86400 %}{% endif %}
+
+          {# ensure set_ts is after rise_ts #}
+          {% if set_ts < rise_ts %}{% set set_ts = set_ts + 86400 %}{% endif %}
+
+          {# start of local day #}
+          {% set day_start = as_timestamp(now().replace(hour=0, minute=0, second=0, microsecond=0)) %}
+
+          {# map sunrise/sunset onto 0-100% of day #}
+          {% set sunrise_pct = ((rise_ts - day_start) / 86400 * 100) %}
+          {% set sunset_pct  = ((set_ts  - day_start) / 86400 * 100) %}
+
+          {# solar noon = midpoint between sunrise and sunset #}
+          {% set noon_ts = rise_ts + ((set_ts - rise_ts) / 2) %}
+          {% set noon_pct = ((noon_ts - day_start) / 86400 * 100) %}
+
+          background:
+
+          /* 🕛 SOLAR NOON (dominant) */
+          linear-gradient(
+            to bottom,
+            {{ top_color ~ 'FF' }} 0%,
+            {{ top_color ~ 'FF' }} 0%,
+            {{ top_color ~ 'FF' }} 0%,
+            {{ top_color ~ 'FF' }} 0%
+          )
+          calc({{ noon_pct }}% - 2px) / 1px 45% no-repeat;
+
+        }

@@ -1,149 +1,156 @@
-type: custom:bubble-card
-card_type: button
-button_type: state
-entity: sensor.h5104_6370_temperature
-name: Bathroom
-show_state: false
-show_icon: false
-card_layout: normal
-grid_options:
-  columns: 3.5
-  rows: auto
-scrolling_effect: false
 card_mod:
   style: >
-    :host {
-      --bubble-border-radius: 16px !important;
-    } /* 1. Transparent card background */  ha-card, .bubble-card,
-    .card-content, #card {
-      background: transparent !important;
-      box-shadow: none !important;
-      border: none !important;
-    }
-
-    /* 2. Dynamic Card Name (Top Status + Battery Emoji) */  .bubble-name {
-      visibility: hidden;
+    ha-card {
       position: relative;
+      overflow: hidden;
+      border-radius: 16px;
     }
 
-    .bubble-name::before {
-      visibility: visible;
+    /* ===============================
+       GLASS BLUR LAYER
+       =============================== */
+    ha-card::before {
+      content: "";
       position: absolute;
-      left: 0; right: 0;
-      text-align: center;
-      font-size: 1.1em;
-      font-weight: 900;
+      inset: 0;
+      z-index: 0;
 
-      {% set battery = states('sensor.h5104_6370_battery') | float(0) %}
+      /* This is critical */
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
 
-      /* Battery color */
-      {% if battery >= 80 %}
-        {% set title_color = 'var(--success-color)' %}
-        {% set battery_emoji = "🔋" %}
-      {% elif battery >= 50 %}
-        {% set title_color = 'var(--info-color)' %}
-        {% set battery_emoji = "🟢" %}
-      {% elif battery >= 30 %}
-        {% set title_color = 'var(--warning-color)' %}
-        {% set battery_emoji = "🟡" %}
-      {% elif battery >= 15 %}
-        {% set title_color = 'var(--error-color)' %}
-        {% set battery_emoji = "🟠" %}
-      {% else %}
-        {% set title_color = '#ff0000' %}
-        {% set battery_emoji = "❌" %}
-      {% endif %}
+      /* Must NOT be fully transparent */
+      background: rgba(0, 0, 0, 0.25);
 
-      content: "{{ battery_emoji }} Bathroom {{ battery_emoji }}";
-      color: {{ title_color }} !important;
+      pointer-events: none;
     }
 
-    /* 3. Temperature + Humidity text with individual colors */  .state {
-      font-size: 1em;
-      font-weight: 700;
-      text-align: center;
+    /* Keep all real content ABOVE blur */ ha-card > * {
       position: relative;
-      margin-bottom: 0em;
+      z-index: 1;
+    }  /* ----------------------------
+       TEMP -> BOTTOM COLOR
+       ---------------------------- */
+    {% set temp = states('sensor.st_00176926_air_temperature') | float(0) %} {%
+    set bottom_color = '#D8C8B8' %} {% if temp >= 105 %}
+      {% set bottom_color = '#58141D' %}
+    {% elif temp >= 100 %}
+      {% set bottom_color = '#B32821' %}
+    {% elif temp >= 95 %}
+      {% set bottom_color = '#C73E1D' %}
+    {% elif temp >= 90 %}
+      {% set bottom_color = '#E35D27' %}
+    {% elif temp >= 85 %}
+      {% set bottom_color = '#FF7518' %}
+    {% elif temp >= 80 %}
+      {% set bottom_color = '#FF9C00' %}
+    {% elif temp >= 75 %}
+      {% set bottom_color = '#FFD200' %}
+    {% elif temp >= 70 %}
+      {% set bottom_color = '#FFEC00' %}
+    {% elif temp >= 65 %}
+      {% set bottom_color = '#A9C94C' %}
+    {% elif temp >= 60 %}
+      {% set bottom_color = '#7DBB48' %}
+    {% elif temp >= 55 %}
+      {% set bottom_color = '#6DB04A' %}
+    {% elif temp >= 50 %}
+      {% set bottom_color = '#4C9F38' %}
+    {% elif temp >= 45 %}
+      {% set bottom_color = '#1D9D73' %}
+    {% elif temp >= 40 %}
+      {% set bottom_color = '#00A19A' %}
+    {% elif temp >= 35 %}
+      {% set bottom_color = '#6CC6CE' %}
+    {% elif temp >= 30 %}
+      {% set bottom_color = '#9ED4F0' %}
+    {% elif temp >= 25 %}
+      {% set bottom_color = '#2C5AA0' %}
+    {% elif temp >= 20 %}
+      {% set bottom_color = '#1C3D7A' %}
+    {% elif temp >= 15 %}
+      {% set bottom_color = '#5C4699' %}
+    {% elif temp >= 10 %}
+      {% set bottom_color = '#7E58A0' %}
+    {% elif temp >= 5 %}
+      {% set bottom_color = '#856A67' %}
+    {% elif temp >= 0 %}
+      {% set bottom_color = '#A6A1A1' %}
+    {% elif temp >= -5 %}
+      {% set bottom_color = '#BFB6AF' %}
+    {% endif %}
+
+
+    /* ----------------------------
+       CARD BASE
+       ---------------------------- */
+        ha-card {
+          position: relative;
+          background: transparent !important;
+          box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5) !important;
+          border-radius: 16px !important;
+          overflow: hidden;
+          transform-origin: top;
+          transform: scale(0.95);
+          transform-origin: top center;
+          margin: 0 !important;
+    } /* ONE unified glow layer */ ha-card::before {
+      content: "";
+      position: absolute;
+      inset: -25%;
+      pointer-events: none;
+      z-index: 0;
+
+      background:
+
+        /* 🌡️ TEMP GLOW (BOTTOM) — this was upside-down in your version */
+        radial-gradient(
+          circle at 50% 0%,
+          {{ bottom_color ~ '88' }} 50%,
+          rgba(0,0,0,0) 100%
+        );
+
+      opacity: 1;
+      filter: blur(18px);
+
+        /* ----------------------------
+           WIND DIRECTION (degrees) -> glow position
+           ---------------------------- */
+        {% set deg = states('sensor.st_00176926_wind_direction') | float(0) %}
+        {% set rad = (deg - 90) * 3.14159265 / 180 %} {% set wind_x = 50 + (45 *
+        (rad | cos)) %} {% set wind_y = 50 + (45 * (rad | sin)) %}
+
+        /* NORTH = RED | SOUTH = BLUE (smooth cosine) */ {% set north_strength =
+        ((deg * 3.14159265 / 180) | cos + 1) / 2 %} {% set red  = (255 *
+        north_strength) | int %} {% set blue = (255 * (1 - north_strength)) |
+        int %} {% set wind_rgba = 'rgba(' ~ red ~ ', 1, ' ~ blue ~ ', 1)' %}
+
+    }  /* -----------------------------
+       WIND BORDER GLOW (MASKED)
+       ----------------------------- */
+    ha-card::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      pointer-events: none;
+      z-index: 2;
+      border-radius: 16px;
+      padding: 5px;
+
+      background:
+        radial-gradient(
+          circle at {{ wind_x }}% {{ wind_y }}%,
+          {{ wind_rgba }} 10%,
+          rgba(0,0,0,0) 25%
+        );
+
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+
+      mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      mask-composite: exclude;
     }
-
-    /* Temperature part */  .state::before {
-      {% set t = states('sensor.h5104_6370_temperature') | float(0) | round(0) %}
-      {% if t < 60 %}
-        {% set temp_emoji = "🥶" %}
-        {% set temp_color = 'var(--info-color)' %}
-      {% elif t < 75 %}
-        {% set temp_emoji = "🤓" %}
-        {% set temp_color = 'var(--success-color)' %}
-      {% elif t < 85 %}
-        {% set temp_emoji = "😓" %}
-        {% set temp_color = 'var(--warning-color)' %}
-      {% elif t < 90 %}
-        {% set temp_emoji = "🥵" %}
-        {% set temp_color = 'var(--error-color)' %}
-      {% else %}
-        {% set temp_emoji = "❌" %}
-        {% set temp_color = 'var(--error-color)' %}
-      {% endif %}
-      content: "{{ temp_emoji }} {{ t }}°";
-      color: {{ temp_color }} !important;
-    }
-
-    /* Humidity part */  .state::after {
-      {% set humidity = states('sensor.h5104_6370_humidity') | float(0) | int %}
-      {% if humidity >= 70 %}
-        {% set hum_emoji = "💦" %}
-        {% set hum_color = 'var(--info-color)' %}
-      {% elif humidity >= 60 %}
-        {% set hum_emoji = "☁️" %}
-        {% set hum_color = 'var(--warning-color)' %}
-      {% elif humidity >= 30 %}
-        {% set hum_emoji = "✅" %}
-        {% set hum_color = 'var(--success-color)' %}
-      {% elif humidity >= 20 %}
-        {% set hum_emoji = "💨" %}
-        {% set hum_color = '#daa520' %}
-      {% else %}
-        {% set hum_emoji = "🏜️" %}
-        {% set hum_color = '#a0522d' %}
-      {% endif %}
-      content: "➖{{ humidity }}% {{ hum_emoji }}";
-      color: {{ hum_color }} !important;
-    }
-
-    /* 4. Dynamic bubble button background using linear gradient */
-    .bubble-button,  .bubble-button-inner {
-      {% set t = states('sensor.h5104_6370_temperature') | float(0) %}
-      {% set temp_color = 'rgba(255,255,255,0.05)' %}
-      {% if t < 60 %}
-        {% set temp_color = 'rgba(0, 125, 255, 0.2)' %}
-      {% elif t < 75 %}
-        {% set temp_color = 'rgba(0, 200, 0, 0.2)' %}
-      {% elif t < 85 %}
-        {% set temp_color = 'rgba(255, 165, 0, 0.2)' %}
-      {% elif t < 90 %}
-        {% set temp_color = 'rgba(255, 0, 0, 0.2)' %}
-      {% else %}
-        {% set temp_color = 'rgba(200, 0, 0, 0.3)' %}
-      {% endif %}
-
-      {% set h = states('sensor.h5104_6370_humidity') | float(0) %}
-      {% set hum_color = 'rgba(0,0,0,0.05)' %}
-      {% if h >= 70 %}
-        {% set hum_color = 'rgba(0, 150, 255, 0.2)' %}
-      {% elif h >= 60 %}
-        {% set hum_color = 'rgba(255, 165, 0, 0.2)' %}
-      {% elif h >= 30 %}
-        {% set hum_color = 'rgba(0, 200, 0, 0.2)' %}
-      {% else %}
-        {% set hum_color = 'rgba(160, 82, 45, 0.2)' %}
-      {% endif %}
-
-      background: linear-gradient(
-        to right,
-        {{ temp_color }} 0%,
-        {{ hum_color }} 100%
-      ) !important;
-
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      border: none !important;

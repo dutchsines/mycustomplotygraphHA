@@ -1,3 +1,42 @@
+type: custom:weather-chart-card
+entity: weather.206_n_arch_st
+show_main: false
+show_temperature: false
+show_current_condition: false
+show_attributes: false
+show_time: false
+show_time_seconds: false
+show_day: false
+show_date: false
+show_humidity: false
+show_pressure: false
+show_wind_direction: false
+show_wind_speed: false
+show_sun: false
+show_feels_like: false
+show_dew_point: false
+show_wind_gust_speed: false
+show_visibility: false
+show_last_changed: false
+use_12hour_format: false
+icons_size: "51"
+animated_icons: true
+icon_style: style1
+autoscroll: false
+forecast:
+  precipitation_type: rainfall
+  show_probability: false
+  labels_font_size: "15"
+  precip_bar_size: "100"
+  style: style2
+  show_wind_forecast: false
+  condition_icons: true
+  round_temp: false
+  type: daily
+  number_of_forecasts: "7"
+  disable_animation: false
+units:
+  speed: ""
 card_mod:
   style: >
     ha-card {
